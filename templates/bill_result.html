@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bill</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .bill { max-width: 400px; margin: auto; border: 1px solid #ccc; padding: 20px; }
+        h2, .center { text-align: center; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 6px 0; }
+        .right { text-align: right; }
+        hr { border: none; border-top: 1px dashed #999; }
+    </style>
+</head>
+<body>
+    <div class="bill">
+        <h2>ASWATHY STORES</h2>
+        <p>Date: {{ today }}<br>Customer: {{ customer }}</p>
+        <hr>
+        <table>
+            {% for item, qty, price, line in bill_items %}
+            <tr>
+                <td>{{ item }} {{ "%g"|format(qty) }} x ₹{{ "%g"|format(price) }}</td>
+                <td class="right">₹{{ "%.0f"|format(line) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <hr>
+        <p>Total: ₹{{ "%.0f"|format(bill_total) }}<br>
+           Paid: ₹{{ "%.0f"|format(paid) }}<br>
+           Balance: ₹{{ "%.0f"|format(balance) }}</p>
+        <hr>
+        <p class="center">Thank you, visit again!</p>
+    </div>
+    <p class="center"><a href="/bill">New bill</a> | <a href="/">Back to summary</a></p>
+</body>
+</html>
