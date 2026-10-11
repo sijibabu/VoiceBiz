@@ -1,0 +1,5 @@
+date,customer,items,total,paid,balance
+2026-10-01,customer1,2,150,150,0
+2026-10-02,customer2,1,80,30,50
+2026-10-03,customer3,3,220,0,220
+2026-10-04,customer2,0,0,20,-20
