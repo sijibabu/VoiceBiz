@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New bill</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2 { text-align: center; }
+        form { max-width: 500px; margin: auto; display: flex; flex-direction: column; gap: 10px; }
+        input, select, button { padding: 10px; font-size: 16px; }
+        .item-row { display: flex; gap: 6px; }
+        .item-row input { min-width: 0; flex: 1; }
+        .item-row input:first-child { flex: 2; }
+    </style>
+</head>
+
+<body>
+    <h2>New bill</h2>
+    {% if error %}
+    <p style="color:red; text-align:center">{{ error }}</p>
+    {% endif %}
+    <form method="post">
+        <label>Customer</label>
+        <input type="text" name="customer" required>
+        <button type="button" id="speak-item">Speak item</button>
+        <p id="heard"></p>
+        <label>Items (leave extra rows empty)</label>
+        {% for i in range(5) %}
+        <div class="item-row">
+            <input type="text" name="item" placeholder="Item">
+            <input type="number" name="quantity" step="0.01" min="0" placeholder="Qty">
+            <input type="number" name="price" step="0.01" min="0" placeholder="Price">
+        </div>
+        {% endfor %}
+
+        <label>Payment</label>
+        <select name="status">
+            <option value="p">Paid</option>
+            <option value="c">Credit</option>
+            <option value="pp">Partially paid</option>
+        </select>
+        <input type="number" name="paid_amount" step="0.01" min="0" placeholder="Amount paid (only for partial)">
+
+        <button type="submit">Save bill</button>
+        
+    </form>
+    <p style="text-align:center"><a href="/">Back to summary</a></p>
+<script>
+const UNITS = ["kilo","kg","kilogram","litre","liter","rupees","rupee","rs","gram","grams","packet","packets"];
+const WORDS = {half:0.5, one:1, won:1, two:2, to:2, too:2, three:3, four:4, for:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10};
+
+function parseItem(text) {
+  const words = text.toLowerCase().replace("₹", " ").split(/\s+/);
+  const nameWords = [];
+  const numbers = [];
+  for (const w of words) {
+    if (w === "" || UNITS.includes(w)) continue;
+    if (w in WORDS) numbers.push(WORDS[w]);
+    else if (!isNaN(w)) numbers.push(parseFloat(w));
+    else nameWords.push(w);
+  }
+    const name = nameWords.join(" ");
+  if (numbers.length !== 2 || name.length < 2) return null;
+  return { item: name, qty: numbers[0], price: numbers[1] };
+}
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const heard = document.getElementById("heard");
+const btn = document.getElementById("speak-item");
+
+if (!SR) {
+  btn.disabled = true;
+  heard.textContent = "Voice is not supported here. Use Chrome or Edge.";
+} else {
+  const rec = new SR();
+  rec.lang = "en-IN";
+
+  rec.onresult = e => {
+    const text = e.results[0][0].transcript;
+    const r = parseItem(text);
+    if (r === null) {
+      heard.textContent = 'Heard "' + text + '" but could not read item, quantity and price. Please type it.';
+      return;
+    }
+    const items = document.querySelectorAll('input[name="item"]');
+    const qtys = document.querySelectorAll('input[name="quantity"]');
+    const prices = document.querySelectorAll('input[name="price"]');
+    let i = 0;
+    while (i < items.length && items[i].value.trim() !== "") i++;
+    if (i === items.length) {
+      heard.textContent = "All rows are full.";
+      return;
+    }
+    items[i].value = r.item;
+    qtys[i].value = r.qty;
+    prices[i].value = r.price;
+    heard.textContent = 'Heard "' + text + '". Filled row ' + (i + 1) + ". Check it and fix anything wrong.";
+    items[i].style.background = "#fff3cd";
+    qtys[i].style.background = "#fff3cd";
+    prices[i].style.background = "#fff3cd";
+};
+
+  rec.onerror = e => { heard.textContent = "Error: " + e.error; };
+  btn.onclick = () => { heard.textContent = "Listening..."; rec.start(); };
+}
+</script>
+</body>
+</html>
